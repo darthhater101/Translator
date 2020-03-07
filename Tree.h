@@ -20,7 +20,7 @@ private:
 	void print(node_t* node, std::string sep);
 
 public:
-	Tree() noexcept
+	Tree()
 	{
 		root = new node_t;
 		root->value = "<signal-program>";

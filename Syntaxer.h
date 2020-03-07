@@ -15,7 +15,14 @@ private:
 	bool declaration();
 	bool variable_identifier();
 	bool attribute();
-	bool statemant_list();
+	bool statement_list();
+	bool statement();
+	bool condition_statement();
+	bool incomplete_condition_statement();
+	bool conditional_expression();
+	bool expression();
+	bool unsigned_integer();
+	bool alternative_part();
 
 	bool identifier();
 

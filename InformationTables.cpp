@@ -38,6 +38,16 @@ bool InformationTables::is_identifier(int code)
 	return false;
 }
 
+bool InformationTables::is_constant(int code)
+{
+	for (const auto& it : constants)
+	{
+		if (it.second == code)
+			return true;
+	}
+	return false;
+}
+
 std::string InformationTables::get_identifier_string(int code)
 {
 	for (const auto& it : identifiers)
@@ -50,6 +60,15 @@ std::string InformationTables::get_identifier_string(int code)
 std::string InformationTables::get_keyword_string(int code)
 {
 	for (const auto& it : key_words)
+	{
+		if (it.second == code)
+			return it.first;
+	}
+}
+
+std::string InformationTables::get_constant_string(int code)
+{
+	for (const auto& it : constants)
 	{
 		if (it.second == code)
 			return it.first;

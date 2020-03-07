@@ -10,7 +10,13 @@ std::map<int, std::string> errors = {
 	{-6, "\'END\' expected!\n"},
 	{-7, "\'VAR\' expected!\n"},
 	{-8, "\':\' expected!\n"},
-	{-9, "\'INTEGER\' or \'FLOAT\' expected!\n"}
+	{-9, "\'INTEGER\' or \'FLOAT\' expected!\n"},
+	{-10, "\'ENDIF\' expected!\n"},
+	{-11, "\'IF\' expected!\n"},
+	{-12, "\'THEN\' expected!\n"},
+	{-13, "\'=\' expected!\n"},
+	{-14, "Constant expected!\n"},
+	{-15, "\'ELSE\' expected!\n"}
 };
 
 Syntaxer::~Syntaxer()
@@ -85,9 +91,10 @@ bool Syntaxer::block()
 	{
 		tree.add("BEGIN");
 		tree.step_back();
-		if (!statemant_list())
-			return false;
 		get_lexem();
+		if (!statement_list())
+			return false;
+		//get_lexem();
 		if (current_lexem_code == 303)
 		{
 			tree.add("END");
@@ -218,9 +225,181 @@ bool Syntaxer::attribute()
 	return true;
 }
 
-bool Syntaxer::statemant_list()
+bool Syntaxer::statement_list()
 {
 	tree.add("<statement-list>");
+	if (current_lexem_code == 303 || current_lexem_code == 310 || current_lexem_code == 308)
+	{
+		tree.add("<empty>");
+		tree.step_back();
+	}
+	else
+	{
+		if (!statement())
+			return false;
+		get_lexem();
+		if (!statement_list())
+			return false;
+	}
+	tree.step_back();
+	return true;
+}
+
+bool Syntaxer::statement()
+{
+	tree.add("<statement>");
+	if (!condition_statement())
+		return false;
+	//get_lexem();
+	if (current_lexem_code == 308)
+	{
+		tree.add("ENDIF");
+		tree.step_back();
+		get_lexem();
+		if (current_lexem_code == static_cast<int>(';'))
+		{
+			tree.add(";");
+			tree.step_back();
+		}
+		else
+		{
+			error << errors[-2];
+			return false;
+		}
+	}
+	else
+	{
+		error << errors[-10];
+		return false;
+	}
+	tree.step_back();
+	return true;
+}
+
+bool Syntaxer::condition_statement()
+{
+	tree.add("<condition-statement>");
+	if (!incomplete_condition_statement())
+		return false;
+	//get_lexem();
+	if (!alternative_part())
+		return false;
+	tree.step_back();
+	return true;
+}
+
+bool Syntaxer::incomplete_condition_statement()
+{
+	tree.add("<incomplete-condition-statement>");
+	if (current_lexem_code == 307)
+	{
+		tree.add("IF");
+		tree.step_back();
+		get_lexem();
+		if (!conditional_expression())
+			return false;
+		get_lexem();
+		if (current_lexem_code == 309)
+		{
+			tree.add("THEN");
+			tree.step_back();
+			get_lexem();
+			if (!statement_list())
+				return false;
+		}
+		else
+		{
+			error << errors[-12];
+			return false;
+		}
+	}
+	else
+	{
+		error << errors[-11];
+		return false;
+	}
+	tree.step_back();
+	return true;
+}
+
+bool Syntaxer::conditional_expression()
+{
+	tree.add("<conditional-expression>");
+	if (!expression())
+		return false;
+	get_lexem();
+	if (current_lexem_code == static_cast<int>('='))
+	{
+		tree.add("=");
+		tree.step_back();
+	}
+	else
+	{
+		error << errors[-13];
+		return false;
+	}
+	get_lexem();
+	if (!expression())
+		return false;
+	tree.step_back();
+	return true;
+}
+
+bool Syntaxer::expression() // error here, need to be fixed
+{
+	tree.add("<expression>");
+	if (!variable_identifier())
+	{
+		if (!unsigned_integer())
+		{
+			return false;
+		}
+	}
+	tree.step_back();
+	return true;
+}
+
+bool Syntaxer::unsigned_integer()
+{
+	tree.add("<unsigned-integer>");
+	if (!tables->is_constant(current_lexem_code))
+	{
+		error << errors[-14];
+		return false;
+	}
+	else
+	{
+		tree.add(tables->get_constant_string(current_lexem_code));
+		tree.step_back();
+	}
+	tree.step_back();
+	return true;
+}
+
+bool Syntaxer::alternative_part()
+{
+	tree.add("<alternative-part>");
+	if (current_lexem_code == 308)
+	{
+		tree.add("<empty>");
+		tree.step_back();
+	}
+	else
+	{
+		if (current_lexem_code == 310)
+		{
+			tree.add("ELSE");
+			tree.step_back();
+			get_lexem();
+			if (!statement_list())
+				return false;
+		}
+		else
+		{
+			error << errors[-15];
+			return false;
+		}
+	}
 	tree.step_back();
 	return true;
 }
