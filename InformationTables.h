@@ -43,4 +43,5 @@ public:
 
 	void print_idetifiers();
 	void print_constants();
+	void write_to_file(std::ostream& stream);
 };

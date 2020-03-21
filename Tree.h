@@ -1,6 +1,8 @@
 #pragma once
 #include <iostream>
 #include <vector>
+#include <memory>
+#include <ostream>
 
 class Tree
 {
@@ -8,21 +10,22 @@ private:
 	struct node
 	{
 		std::string value;
-		std::vector<node*> childs;
-		node* parent;
+		std::vector<std::shared_ptr<node>> childs;
+		std::shared_ptr<node> parent;
 	};
 
-	using node_t = struct node;
+	using node_s = struct node;
 
-	node_t* root;
-	node_t* current;
+	std::shared_ptr<node_s> root;
+	std::shared_ptr<node_s> current;
 
-	void print(node_t* node, std::string sep);
+	void print(std::shared_ptr<node_s>&, std::string sep);
+	void write_to_file(std::shared_ptr<node_s>& node, std::ostream& stream, std::string sep);
 
 public:
-	Tree()
+	Tree() 
 	{
-		root = new node_t;
+		root = std::make_shared<node_s>();
 		root->value = "<signal-program>";
 		root->parent = nullptr;
 		current = root;
@@ -30,5 +33,7 @@ public:
 	void add(std::string value);
 	void print();
 	void step_back();
+	void delete_childs();
+	void write_to_file(std::ostream& stream);
 };
 

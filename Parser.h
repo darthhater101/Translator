@@ -3,7 +3,7 @@
 #include "InformationTables.h"
 #include "Tree.h"
 
-class Syntaxer
+class Parser
 {
 private:
 
@@ -28,22 +28,25 @@ private:
 
 	void get_lexem();
 
-	Lexer* lexer = nullptr;
-	InformationTables* tables = nullptr;
+	std::vector<struct Lexer::lexem> lexer_result;
+	std::shared_ptr<InformationTables> tables;
 	Tree tree;
 	int current_lexem_code = 0;
 	int current_position = 0;
+	std::pair<int, int> coord;
 	std::stringstream error;
 	bool ERROR_NOT_FOUND = true;
 
 public:
-	Syntaxer() noexcept {}
-	Syntaxer(Lexer* lexer, InformationTables* tables)
+	Parser() noexcept {}
+	Parser(std::vector<struct Lexer::lexem>& lexer_result, 
+			 std::shared_ptr<InformationTables>& tables)
 	{
-		this->lexer = lexer;
+		this->lexer_result = lexer_result;
 		this->tables = tables;
+		error << "Parser error: ";
 	}
-	~Syntaxer();
+	~Parser();
 	void start();
 	bool is_success() { return ERROR_NOT_FOUND; }
 	std::string get_error() { return error.str(); }

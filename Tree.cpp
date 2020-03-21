@@ -3,7 +3,7 @@
 
 void Tree::add(std::string value)
 {
-	node_t* temp = new node_t;
+	std::shared_ptr<node_s> temp = std::make_shared<node_s>();
 	temp->value = value;
 	temp->parent = this->current;
 	current->childs.push_back(temp);
@@ -21,13 +21,35 @@ void Tree::step_back()
 	current = current->parent;
 }
 
-void Tree::print(node_t* node, std::string sep)
+void Tree::delete_childs()
 {
-	std::cout << sep << node->value << std::endl;
+	current->childs.clear();
+}
+
+void Tree::write_to_file(std::ostream& stream)
+{
+	if (root != nullptr)
+		write_to_file(root, stream, "-");
+}
+
+void Tree::print(std::shared_ptr<node_s>& node, std::string sep)
+{
+	std::cout << sep.length() << sep << node->value << std::endl;
 	if (node->childs.empty())
 		return;
 	for (auto& it : node->childs)
 	{
 		print(it, sep + "--");
+	}
+}
+
+void Tree::write_to_file(std::shared_ptr<node_s>& node, std::ostream& stream, std::string sep)
+{
+	stream << sep.length() << sep << node->value << std::endl;
+	if (node->childs.empty())
+		return;
+	for (auto& it : node->childs)
+	{
+		write_to_file(it, stream, sep + "--");
 	}
 }

@@ -84,7 +84,7 @@ void InformationTables::print_idetifiers()
 		std::cout << "| " << std::setw(15) << it.first << " | "
 			<< std::setw(15) << it.second << " |\n";
 	}
-	std::cout << "-------------------------------------\n";
+	std::cout << "-------------------------------------\n\n";
 }
 
 void InformationTables::print_constants()
@@ -98,5 +98,27 @@ void InformationTables::print_constants()
 		std::cout << "| " << std::setw(15) << it.first << " | "
 			<< std::setw(15) << it.second << " |\n";
 	}
-	std::cout << "-------------------------------------\n";
+	std::cout << "-------------------------------------\n\n";
+}
+
+void InformationTables::write_to_file(std::ostream& stream)
+{
+	stream << "Identifiers table\n";
+	stream << "-------------------------------------\n";
+	for (const auto& it : identifiers)
+	{
+		stream << "| " << std::setw(15) << it.first << " | "
+			<< std::setw(15) << it.second << " |\n";
+	}
+	stream << "-------------------------------------\n\n";
+	stream << "Constants table\n";
+	stream << "-------------------------------------\n";
+	if (constants.empty())
+		std::cout << "Empty\n";
+	for (const auto& it : constants)
+	{
+		stream << "| " << std::setw(15) << it.first << " | "
+			<< std::setw(15) << it.second << " |\n";
+	}
+	stream << "-------------------------------------\n\n";
 }

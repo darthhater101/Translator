@@ -2,7 +2,7 @@
 #include <iostream>
 #include <iomanip>
 
-Lexer::Lexer(const std::string& path, InformationTables* tables)
+Lexer::Lexer(std::ifstream& file, InformationTables* tables)
 {
 	for (int i = 0; i < 128; i++)
 		attributes[i] = 5;
@@ -23,11 +23,13 @@ Lexer::Lexer(const std::string& path, InformationTables* tables)
 	attributes[44] = 3;
 	attributes[40] = 4;
 	this->tables = tables;
-	file.open(path);
+	error << "Lexer error: ";
+	this->file.swap(file);
 }
 
 Lexer::~Lexer()
 {
+	file.close();
 }
 
 void Lexer::start()
@@ -161,8 +163,22 @@ void Lexer::start()
 	file.close();
 }
 
+void Lexer::write_to_file(std::ostream& stream)
+{
+	for (const auto& it : lexems)
+		stream << it;
+	stream << std::endl;
+}
+
 void Lexer::lexem::print() const
 {
 	std::cout << std::setw(2) << row << std::setw(4) << column
 		<< std::setw(5) << code << std::setw(10) << name << "\n";
+}
+
+std::ostream& operator<<(std::ostream& stream, const struct Lexer::lexem& lex)
+{
+	stream << std::setw(2) << lex.row << std::setw(4) << lex.column
+		<< std::setw(5) << lex.code << std::setw(10) << lex.name << "\n";
+	return stream;
 }

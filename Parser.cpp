@@ -1,4 +1,4 @@
-#include "Syntaxer.h"
+#include "Parser.h"
 #include <map>
 
 std::map<int, std::string> errors = {
@@ -15,26 +15,26 @@ std::map<int, std::string> errors = {
 	{-11, "\'IF\' expected!\n"},
 	{-12, "\'THEN\' expected!\n"},
 	{-13, "\'=\' expected!\n"},
-	{-14, "Constant expected!\n"},
+	{-14, "Constant or identifier expected!\n"},
 	{-15, "\'ELSE\' expected!\n"}
 };
 
-Syntaxer::~Syntaxer()
+Parser::~Parser()
 {
 }
 
-void Syntaxer::start()
+void Parser::start()
 {
 	ERROR_NOT_FOUND = program();
 }
 
-bool Syntaxer::program()
+bool Parser::program()
 {
 	tree.add("<program>");
 	get_lexem();
 	if (current_lexem_code == 301)
 	{
-		tree.add("PROGRAM");
+		tree.add("PROGRAM " + std::to_string(current_lexem_code));
 		tree.step_back();
 		get_lexem();
 		if (!procedure_identifier())
@@ -42,12 +42,12 @@ bool Syntaxer::program()
 		get_lexem();
 		if (current_lexem_code == static_cast<int>(';'))
 		{
-			tree.add(";");
+			tree.add("; " + std::to_string(current_lexem_code));
 			tree.step_back();
 		}
 		else
 		{
-			error << errors[-2];
+			error << "row: " + std::to_string(coord.first) << ", column: " + std::to_string(coord.second) << " " << errors[-2];
 			return false;
 		}
 		if (!block())
@@ -55,25 +55,25 @@ bool Syntaxer::program()
 		get_lexem();
 		if (current_lexem_code == static_cast<int>('.'))
 		{
-			tree.add(".");
+			tree.add(". " + std::to_string(current_lexem_code));
 			tree.step_back();
 		}
 		else
 		{
-			error << errors[-3];
+			error << "row: " + std::to_string(coord.first) << ", column: " + std::to_string(coord.second) << " " << errors[-3];
 			return false;
 		}
 	}
 	else
 	{
-		error << errors[-1];
+		error << "row: " + std::to_string(coord.first) << ", column: " + std::to_string(coord.second) << " " << errors[-1];
 		return false;
 	}
 	tree.step_back();
 	return true;
 }
 
-bool Syntaxer::procedure_identifier()
+bool Parser::procedure_identifier()
 {
 	tree.add("<procedure-identifier>");
 	if (!identifier())
@@ -82,14 +82,14 @@ bool Syntaxer::procedure_identifier()
 	return true;
 }
 
-bool Syntaxer::block()
+bool Parser::block()
 {
 	tree.add("<block>");
 	if (!variable_declaration())
 		return false;
 	if (current_lexem_code == 302)
 	{
-		tree.add("BEGIN");
+		tree.add("BEGIN " + std::to_string(current_lexem_code));
 		tree.step_back();
 		get_lexem();
 		if (!statement_list())
@@ -97,25 +97,25 @@ bool Syntaxer::block()
 		//get_lexem();
 		if (current_lexem_code == 303)
 		{
-			tree.add("END");
+			tree.add("END " + std::to_string(current_lexem_code));
 			tree.step_back();
 		}
 		else
 		{
-			error << errors[-6];
+			error << "row: " + std::to_string(coord.first) << ", column: " + std::to_string(coord.second) << " " << errors[-6];
 			return false;
 		}
 	}
 	else
 	{
-		error << errors[-5];
+		error << "row: " + std::to_string(coord.first) << ", column: " + std::to_string(coord.second) << " " << errors[-5];
 		return false;
 	}
 	tree.step_back();
 	return true;
 }
 
-bool Syntaxer::variable_declaration()
+bool Parser::variable_declaration()
 {
 	tree.add("<variable-declaration>");
 	get_lexem();
@@ -128,7 +128,7 @@ bool Syntaxer::variable_declaration()
 	{
 		if (current_lexem_code == 304)
 		{
-			tree.add("VAR");
+			tree.add("VAR " + std::to_string(current_lexem_code));
 			tree.step_back();
 			get_lexem();
 			if (!declarations_list())
@@ -136,7 +136,7 @@ bool Syntaxer::variable_declaration()
 		}
 		else
 		{
-			error << errors[-7];
+			error << "row: " + std::to_string(coord.first) << ", column: " + std::to_string(coord.second) << " " << errors[-7];
 			return false;
 		}
 	}
@@ -144,7 +144,7 @@ bool Syntaxer::variable_declaration()
 	return true;
 }
 
-bool Syntaxer::declarations_list()
+bool Parser::declarations_list()
 {
 	tree.add("<declarations-list>");
 	if (current_lexem_code == 302)
@@ -164,7 +164,7 @@ bool Syntaxer::declarations_list()
 	return true;
 }
 
-bool Syntaxer::declaration()
+bool Parser::declaration()
 {
 	tree.add("<declaration>");
 	if (!variable_identifier())
@@ -172,12 +172,12 @@ bool Syntaxer::declaration()
 	get_lexem();
 	if (current_lexem_code == static_cast<int>(':'))
 	{
-		tree.add(":");
+		tree.add(": " + std::to_string(current_lexem_code));
 		tree.step_back();
 	}
 	else
 	{
-		error << errors[-8];
+		error << "row: " + std::to_string(coord.first) << ", column: " + std::to_string(coord.second) << " " << errors[-8];
 		return false;
 	}
 	get_lexem();
@@ -186,19 +186,19 @@ bool Syntaxer::declaration()
 	get_lexem();
 	if (current_lexem_code == static_cast<int>(';'))
 	{
-		tree.add(";");
+		tree.add("; " + std::to_string(current_lexem_code));
 		tree.step_back();
 	}
 	else
 	{
-		error << errors[-2];
+		error << "row: " + std::to_string(coord.first) << ", column: " + std::to_string(coord.second) << " " << errors[-2];
 		return false;
 	}
 	tree.step_back();
 	return true;
 }
 
-bool Syntaxer::variable_identifier()
+bool Parser::variable_identifier()
 {
 	tree.add("<variable-identifier>");
 	if (!identifier())
@@ -207,25 +207,25 @@ bool Syntaxer::variable_identifier()
 	return true;
 }
 
-bool Syntaxer::attribute()
+bool Parser::attribute()
 {
 	tree.add("<attribute>");
 	if (current_lexem_code != tables->get_keywords("INTEGER")
 		&& current_lexem_code != tables->get_keywords("FLOAT"))
 	{
-		error << errors[-9];
+		error << "row: " + std::to_string(coord.first) << ", column: " + std::to_string(coord.second) << " " << errors[-9];
 		return false;
 	}
 	else
 	{
-		tree.add(tables->get_keyword_string(current_lexem_code));
+		tree.add(tables->get_keyword_string(current_lexem_code) + " " + std::to_string(current_lexem_code));
 		tree.step_back();
 	}
 	tree.step_back();
 	return true;
 }
 
-bool Syntaxer::statement_list()
+bool Parser::statement_list()
 {
 	tree.add("<statement-list>");
 	if (current_lexem_code == 303 || current_lexem_code == 310 || current_lexem_code == 308)
@@ -245,7 +245,7 @@ bool Syntaxer::statement_list()
 	return true;
 }
 
-bool Syntaxer::statement()
+bool Parser::statement()
 {
 	tree.add("<statement>");
 	if (!condition_statement())
@@ -253,30 +253,30 @@ bool Syntaxer::statement()
 	//get_lexem();
 	if (current_lexem_code == 308)
 	{
-		tree.add("ENDIF");
+		tree.add("ENDIF " + std::to_string(current_lexem_code));
 		tree.step_back();
 		get_lexem();
 		if (current_lexem_code == static_cast<int>(';'))
 		{
-			tree.add(";");
+			tree.add("; " + std::to_string(current_lexem_code));
 			tree.step_back();
 		}
 		else
 		{
-			error << errors[-2];
+			error << "row: " + std::to_string(coord.first) << ", column: " + std::to_string(coord.second) << " " << errors[-2];
 			return false;
 		}
 	}
 	else
 	{
-		error << errors[-10];
+		error << "row: " + std::to_string(coord.first) << ", column: " + std::to_string(coord.second) << " " << errors[-10];
 		return false;
 	}
 	tree.step_back();
 	return true;
 }
 
-bool Syntaxer::condition_statement()
+bool Parser::condition_statement()
 {
 	tree.add("<condition-statement>");
 	if (!incomplete_condition_statement())
@@ -288,12 +288,12 @@ bool Syntaxer::condition_statement()
 	return true;
 }
 
-bool Syntaxer::incomplete_condition_statement()
+bool Parser::incomplete_condition_statement()
 {
 	tree.add("<incomplete-condition-statement>");
 	if (current_lexem_code == 307)
 	{
-		tree.add("IF");
+		tree.add("IF " + std::to_string(current_lexem_code));
 		tree.step_back();
 		get_lexem();
 		if (!conditional_expression())
@@ -301,7 +301,7 @@ bool Syntaxer::incomplete_condition_statement()
 		get_lexem();
 		if (current_lexem_code == 309)
 		{
-			tree.add("THEN");
+			tree.add("THEN " + std::to_string(current_lexem_code));
 			tree.step_back();
 			get_lexem();
 			if (!statement_list())
@@ -309,20 +309,20 @@ bool Syntaxer::incomplete_condition_statement()
 		}
 		else
 		{
-			error << errors[-12];
+			error << "row: " + std::to_string(coord.first) << ", column: " + std::to_string(coord.second) << " " << errors[-12];
 			return false;
 		}
 	}
 	else
 	{
-		error << errors[-11];
+		error << "row: " + std::to_string(coord.first) << ", column: " + std::to_string(coord.second) << " " << errors[-11];
 		return false;
 	}
 	tree.step_back();
 	return true;
 }
 
-bool Syntaxer::conditional_expression()
+bool Parser::conditional_expression()
 {
 	tree.add("<conditional-expression>");
 	if (!expression())
@@ -330,12 +330,12 @@ bool Syntaxer::conditional_expression()
 	get_lexem();
 	if (current_lexem_code == static_cast<int>('='))
 	{
-		tree.add("=");
+		tree.add("= " + std::to_string(current_lexem_code));
 		tree.step_back();
 	}
 	else
 	{
-		error << errors[-13];
+		error << "row: " + std::to_string(coord.first) << ", column: " + std::to_string(coord.second) << " " << errors[-13];
 		return false;
 	}
 	get_lexem();
@@ -345,11 +345,15 @@ bool Syntaxer::conditional_expression()
 	return true;
 }
 
-bool Syntaxer::expression() // error here, need to be fixed
+bool Parser::expression()
 {
 	tree.add("<expression>");
 	if (!variable_identifier())
 	{
+		tree.step_back();
+		tree.step_back();
+		tree.delete_childs();
+		error.clear();
 		if (!unsigned_integer())
 		{
 			return false;
@@ -359,24 +363,24 @@ bool Syntaxer::expression() // error here, need to be fixed
 	return true;
 }
 
-bool Syntaxer::unsigned_integer()
+bool Parser::unsigned_integer()
 {
 	tree.add("<unsigned-integer>");
 	if (!tables->is_constant(current_lexem_code))
 	{
-		error << errors[-14];
+		error << "row: " + std::to_string(coord.first) << ", column: " + std::to_string(coord.second) << " " << errors[-14];
 		return false;
 	}
 	else
 	{
-		tree.add(tables->get_constant_string(current_lexem_code));
+		tree.add(tables->get_constant_string(current_lexem_code) + " " + std::to_string(current_lexem_code));
 		tree.step_back();
 	}
 	tree.step_back();
 	return true;
 }
 
-bool Syntaxer::alternative_part()
+bool Parser::alternative_part()
 {
 	tree.add("<alternative-part>");
 	if (current_lexem_code == 308)
@@ -388,7 +392,7 @@ bool Syntaxer::alternative_part()
 	{
 		if (current_lexem_code == 310)
 		{
-			tree.add("ELSE");
+			tree.add("ELSE " + std::to_string(current_lexem_code));
 			tree.step_back();
 			get_lexem();
 			if (!statement_list())
@@ -396,7 +400,7 @@ bool Syntaxer::alternative_part()
 		}
 		else
 		{
-			error << errors[-15];
+			error << "row: " + std::to_string(coord.first) << ", column: " + std::to_string(coord.second) << " " << errors[-15];
 			return false;
 		}
 	}
@@ -404,28 +408,30 @@ bool Syntaxer::alternative_part()
 	return true;
 }
 
-bool Syntaxer::identifier()
+bool Parser::identifier()
 {
 	tree.add("<identifier>");
 	if (!tables->is_identifier(current_lexem_code))
 	{
-		error << errors[-4];
+		error << "row: " + std::to_string(coord.first) << ", column: " + std::to_string(coord.second) << " " << errors[-4];
 		return false;
 	}
 	else
 	{
-		tree.add(tables->get_identifier_string(current_lexem_code));
+		tree.add(tables->get_identifier_string(current_lexem_code) + " " + std::to_string(current_lexem_code));
 		tree.step_back();
 	}
 	tree.step_back();
 	return true;
 }
 
-void Syntaxer::get_lexem()
+void Parser::get_lexem()
 {
-	if (current_position < lexer->get_result().size())
+	if (current_position < lexer_result.size())
 	{
-		current_lexem_code = lexer->get_result().at(current_position).code;
+		current_lexem_code = lexer_result.at(current_position).code;
+		coord.first = lexer_result.at(current_position).row;
+		coord.second = lexer_result.at(current_position).column;
 		current_position++;
 	}
 }
