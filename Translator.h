@@ -2,6 +2,7 @@
 #include "Lexer.h"
 #include "InformationTables.h"
 #include "Parser.h"
+#include "Generator.h"
 
 class Translator
 {

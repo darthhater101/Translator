@@ -34,7 +34,7 @@ bool Parser::program()
 	get_lexem();
 	if (current_lexem_code == 301)
 	{
-		tree.add("PROGRAM " + std::to_string(current_lexem_code));
+		tree.add("PROGRAM");
 		tree.step_back();
 		get_lexem();
 		if (!procedure_identifier())
@@ -42,7 +42,7 @@ bool Parser::program()
 		get_lexem();
 		if (current_lexem_code == static_cast<int>(';'))
 		{
-			tree.add("; " + std::to_string(current_lexem_code));
+			tree.add(";");
 			tree.step_back();
 		}
 		else
@@ -55,7 +55,7 @@ bool Parser::program()
 		get_lexem();
 		if (current_lexem_code == static_cast<int>('.'))
 		{
-			tree.add(". " + std::to_string(current_lexem_code));
+			tree.add(".");
 			tree.step_back();
 		}
 		else
@@ -89,7 +89,7 @@ bool Parser::block()
 		return false;
 	if (current_lexem_code == 302)
 	{
-		tree.add("BEGIN " + std::to_string(current_lexem_code));
+		tree.add("BEGIN");
 		tree.step_back();
 		get_lexem();
 		if (!statement_list())
@@ -97,7 +97,7 @@ bool Parser::block()
 		//get_lexem();
 		if (current_lexem_code == 303)
 		{
-			tree.add("END " + std::to_string(current_lexem_code));
+			tree.add("END");
 			tree.step_back();
 		}
 		else
@@ -128,7 +128,7 @@ bool Parser::variable_declaration()
 	{
 		if (current_lexem_code == 304)
 		{
-			tree.add("VAR " + std::to_string(current_lexem_code));
+			tree.add("VAR");
 			tree.step_back();
 			get_lexem();
 			if (!declarations_list())
@@ -172,7 +172,7 @@ bool Parser::declaration()
 	get_lexem();
 	if (current_lexem_code == static_cast<int>(':'))
 	{
-		tree.add(": " + std::to_string(current_lexem_code));
+		tree.add(":");
 		tree.step_back();
 	}
 	else
@@ -186,7 +186,7 @@ bool Parser::declaration()
 	get_lexem();
 	if (current_lexem_code == static_cast<int>(';'))
 	{
-		tree.add("; " + std::to_string(current_lexem_code));
+		tree.add(";");
 		tree.step_back();
 	}
 	else
@@ -218,7 +218,7 @@ bool Parser::attribute()
 	}
 	else
 	{
-		tree.add(tables->get_keyword_string(current_lexem_code) + " " + std::to_string(current_lexem_code));
+		tree.add(tables->get_keyword_string(current_lexem_code));
 		tree.step_back();
 	}
 	tree.step_back();
@@ -253,12 +253,12 @@ bool Parser::statement()
 	//get_lexem();
 	if (current_lexem_code == 308)
 	{
-		tree.add("ENDIF " + std::to_string(current_lexem_code));
+		tree.add("ENDIF");
 		tree.step_back();
 		get_lexem();
 		if (current_lexem_code == static_cast<int>(';'))
 		{
-			tree.add("; " + std::to_string(current_lexem_code));
+			tree.add(";");
 			tree.step_back();
 		}
 		else
@@ -293,7 +293,7 @@ bool Parser::incomplete_condition_statement()
 	tree.add("<incomplete-condition-statement>");
 	if (current_lexem_code == 307)
 	{
-		tree.add("IF " + std::to_string(current_lexem_code));
+		tree.add("IF");
 		tree.step_back();
 		get_lexem();
 		if (!conditional_expression())
@@ -301,7 +301,7 @@ bool Parser::incomplete_condition_statement()
 		get_lexem();
 		if (current_lexem_code == 309)
 		{
-			tree.add("THEN " + std::to_string(current_lexem_code));
+			tree.add("THEN");
 			tree.step_back();
 			get_lexem();
 			if (!statement_list())
@@ -330,7 +330,7 @@ bool Parser::conditional_expression()
 	get_lexem();
 	if (current_lexem_code == static_cast<int>('='))
 	{
-		tree.add("= " + std::to_string(current_lexem_code));
+		tree.add("=");
 		tree.step_back();
 	}
 	else
@@ -373,7 +373,7 @@ bool Parser::unsigned_integer()
 	}
 	else
 	{
-		tree.add(tables->get_constant_string(current_lexem_code) + " " + std::to_string(current_lexem_code));
+		tree.add(tables->get_constant_string(current_lexem_code));
 		tree.step_back();
 	}
 	tree.step_back();
@@ -392,7 +392,7 @@ bool Parser::alternative_part()
 	{
 		if (current_lexem_code == 310)
 		{
-			tree.add("ELSE " + std::to_string(current_lexem_code));
+			tree.add("ELSE");
 			tree.step_back();
 			get_lexem();
 			if (!statement_list())
@@ -418,7 +418,7 @@ bool Parser::identifier()
 	}
 	else
 	{
-		tree.add(tables->get_identifier_string(current_lexem_code) + " " + std::to_string(current_lexem_code));
+		tree.add(tables->get_identifier_string(current_lexem_code));
 		tree.step_back();
 	}
 	tree.step_back();

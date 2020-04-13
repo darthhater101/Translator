@@ -51,6 +51,9 @@ void Translator::translation()
 		system("pause");
 		exit(-1);
 	}
+	std::cout << "\n\n\n";
+	Generator generator(parser.get_tree(), tables_ptr);
+	generator.traversal();
 	delete tables;
 }
 

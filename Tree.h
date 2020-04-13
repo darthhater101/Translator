@@ -35,5 +35,9 @@ public:
 	void step_back();
 	void delete_childs();
 	void write_to_file(std::ostream& stream);
+
+	std::shared_ptr<node_s> ger_root() { return root; }
+
+	friend class Generator;
 };
 

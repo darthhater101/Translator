@@ -35,6 +35,7 @@ public:
 	int add_constant(const std::string& constant);
 	int get_separator(char c) { return separators[c]; }
 	int get_keywords(const std::string& keyword) { return key_words[keyword]; }
+	int get_identifier(const std::string& identifier) { return identifiers[identifier]; }
 	bool is_identifier(int code);
 	bool is_constant(int code);
 	std::string get_identifier_string(int code);
