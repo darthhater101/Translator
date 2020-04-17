@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 #include <stack>
+#include <sstream>
 
 class Generator
 {
@@ -12,9 +13,15 @@ private:
 	std::shared_ptr<InformationTables> tables;
 	std::vector<std::string> identifiers;
 	std::string program_identifier;
-	void traversal(std::shared_ptr<struct Tree::node>& node);
-	int label_index = -1;
+	int if_index = 1;
+	int else_index = 1;
+	std::stack<int> if_stack;
+	std::stack<int> else_stack;
 	std::string program;
+	std::stringstream error;
+
+	void traversal(std::shared_ptr<struct Tree::node>& node);
+	bool identifier_exists(std::string identifier);
 public:
 	Generator() {}
 	Generator(const Tree& tree, const std::shared_ptr<InformationTables>& tables) : tree(tree), tables(tables) {}
