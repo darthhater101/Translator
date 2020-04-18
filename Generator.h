@@ -19,13 +19,16 @@ private:
 	std::stack<int> else_stack;
 	std::string program;
 	std::stringstream error;
+	bool data_exists = false;
 
-	void traversal(std::shared_ptr<struct Tree::node>& node);
+	void traversal(const std::shared_ptr<struct Tree::node>& node);
 	bool identifier_exists(std::string identifier);
 public:
 	Generator() {}
 	Generator(const Tree& tree, const std::shared_ptr<InformationTables>& tables) : tree(tree), tables(tables) {}
 	void traversal();
+	std::string get_error() { return error.str(); }
 	void print() { std::cout << program; }
+	void write_to_file(std::ostream& stream) { stream << program; stream << error.str(); }
 };
 

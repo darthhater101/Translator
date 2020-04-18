@@ -54,6 +54,9 @@ void Translator::translation()
 	std::cout << "\n\n\n";
 	Generator generator(parser.get_tree(), tables_ptr);
 	generator.traversal();
+	generator.print();
+	std::cout << generator.get_error();
+	generator.write_to_file(output);
 	delete tables;
 }
 

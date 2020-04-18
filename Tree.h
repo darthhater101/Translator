@@ -3,6 +3,7 @@
 #include <vector>
 #include <memory>
 #include <ostream>
+#include <optional>
 
 class Tree
 {
@@ -12,6 +13,8 @@ private:
 		std::string value;
 		std::vector<std::shared_ptr<node>> childs;
 		std::shared_ptr<node> parent;
+		int line;
+		int column;
 	};
 
 	using node_s = struct node;
@@ -30,7 +33,7 @@ public:
 		root->parent = nullptr;
 		current = root;
 	}
-	void add(std::string value);
+	void add(std::string value, int line = -1, int column = -1);
 	void print();
 	void step_back();
 	void delete_childs();

@@ -1,7 +1,7 @@
 #include "Generator.h"
 #include <string>
 
-void Generator::traversal(std::shared_ptr<struct Tree::node>& node)
+void Generator::traversal(const std::shared_ptr<struct Tree::node>& node)
 {
 	if (node->value == "<program>")
 	{
@@ -30,6 +30,7 @@ void Generator::traversal(std::shared_ptr<struct Tree::node>& node)
 	else if (node->value == "VAR")
 	{
 		program.append("DATA SEGMENT\n");
+		data_exists = true;
 	}
 	else if (node->value == "<declarations-list>")
 	{
@@ -43,10 +44,13 @@ void Generator::traversal(std::shared_ptr<struct Tree::node>& node)
 	}
 	else if (node->value == "<declaration>")
 	{
+		program.append("\t");
 		traversal(node->childs.at(0));
 		if (identifier_exists(node->childs.at(0)->childs.at(0)->childs.at(0)->value))
 		{
-			error << "Such identifier already exist\n";
+			error << "Generator: Such identifier already exist: " << "row: " + std::to_string(node->childs.at(0)->childs.at(0)->childs.at(0)->line)
+				+ " column: " + std::to_string(node->childs.at(0)->childs.at(0)->childs.at(0)->column) + ", identifier: "
+				+ node->childs.at(0)->childs.at(0)->childs.at(0)->value + "\n";
 		}
 		else
 		{
@@ -68,17 +72,21 @@ void Generator::traversal(std::shared_ptr<struct Tree::node>& node)
 	}
 	else if (node->value == "BEGIN")
 	{
-		program.append("CODE SEGMENT\n\tASSUME CS:CODE, DS:DATA\n");
+		program.append("CODE SEGMENT\n\tASSUME CS:CODE");
+		if (data_exists) program.append(", DS:DATA\n");
+		else program.append("\n");
 		program.append(program_identifier + ":\n");
 	}
 	else if (node->value == "END")
 	{
 		program.append("MOV AH, 4Ch\nINT 21h\nCODE ENDS\nEND " + program_identifier);
+		program.append("\n");
 	}
 	else if (node->value == "<statement-list>")
 	{
 		if (node->childs.at(0)->value == "<empty>")
 		{
+			program.append("\tNOP\n");
 			return;
 		}
 		traversal(node->childs.at(0));
@@ -88,6 +96,7 @@ void Generator::traversal(std::shared_ptr<struct Tree::node>& node)
 	{
 		traversal(node->childs.at(0));
 		traversal(node->childs.at(1));
+		traversal(node->childs.at(2));
 	}
 	else if (node->value == "<condition-statement>")
 	{
@@ -101,20 +110,31 @@ void Generator::traversal(std::shared_ptr<struct Tree::node>& node)
 	}
 	else if (node->value == "<conditional-expression>")
 	{
-		program.append("MOV AX, ");
+		program.append("\tMOV AX, ");
 		traversal(node->childs.at(0));
 		program.append("\n");
-		program.append("MOV BX, ");
+		program.append("\tMOV BX, ");
 		traversal(node->childs.at(2));
 		program.append("\n");
-		program.append("CMP AX, BX\n");
+		program.append("\tCMP AX, BX\n");
 		traversal(node->childs.at(1));
 	}
 	else if (node->value == "<expression>")
 	{
-		if (!identifier_exists(node->childs.at(0)->childs.at(0)->childs.at(0)->value))
+		if (node->childs.at(0)->value == "<variable-identifier>")
 		{
-			error << "No such identifier\n";
+			if (!identifier_exists(node->childs.at(0)->childs.at(0)->childs.at(0)->value))
+			{
+				error << "Generator: No such identifier: " << "row: " + std::to_string(node->childs.at(0)->childs.at(0)->childs.at(0)->line)
+					+ " column: " + std::to_string(node->childs.at(0)->childs.at(0)->childs.at(0)->column) + ", identifier: "
+					+ node->childs.at(0)->childs.at(0)->childs.at(0)->value + "\n";
+			}
+			if (node->childs.at(0)->childs.at(0)->childs.at(0)->value == program_identifier)
+			{
+				error << "Generator: Such identifier already exist: " << "row: " + std::to_string(node->childs.at(0)->childs.at(0)->childs.at(0)->line)
+					+ " column: " + std::to_string(node->childs.at(0)->childs.at(0)->childs.at(0)->column) + ", identifier: "
+					+ node->childs.at(0)->childs.at(0)->childs.at(0)->value + "\n";
+			}
 		}
 		traversal(node->childs.at(0));
 	}
@@ -125,7 +145,7 @@ void Generator::traversal(std::shared_ptr<struct Tree::node>& node)
 	else if (node->value == "=")
 	{
 		if_stack.push(if_index);
-		program.append("JNE ?L" + std::to_string(if_index++));
+		program.append("\tJNE ?L" + std::to_string(if_index++));
 		program.append("\n");
 	}
 	else if (node->value == "<alternative-part>")
@@ -134,7 +154,7 @@ void Generator::traversal(std::shared_ptr<struct Tree::node>& node)
 		{
 			int label = if_stack.top();
 			if_stack.pop();
-			program.append("?L" + std::to_string(label) + ":NOP\n");
+			program.append("?L" + std::to_string(label) + ":    NOP\n");
 			return;
 		}
 		traversal(node->childs.at(0));
@@ -143,18 +163,22 @@ void Generator::traversal(std::shared_ptr<struct Tree::node>& node)
 	else if (node->value == "ELSE")
 	{
 		else_stack.push(else_index);
-		program.append("JMP ?LE" + std::to_string(else_index++) + "\n");
+		program.append("\tJMP ?LE" + std::to_string(else_index++) + "\n");
 		int label = if_stack.top();
 		if_stack.pop();
-		program.append("?L" + std::to_string(label) + ":NOP\n");
+		program.append("?L" + std::to_string(label) + ":    NOP\n");
 	}
 	else if (node->value == "ENDIF")
 	{
 		if (else_stack.empty()) return;
 		int label = else_stack.top();
 		else_stack.pop();
-		program.append("?LE" + std::to_string(label) + ":NOP\n");
+		program.append("?LE" + std::to_string(label) + ":   NOP\n");
 		return;
+	}
+	else if (node->value == ";")
+	{
+		program.append("\tNOP\n");
 	}
 }
 

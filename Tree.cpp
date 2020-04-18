@@ -1,11 +1,13 @@
 #include "Tree.h"
 
 
-void Tree::add(std::string value)
+void Tree::add(std::string value, int line, int column)
 {
 	std::shared_ptr<node_s> temp = std::make_shared<node_s>();
 	temp->value = value;
 	temp->parent = this->current;
+	temp->line = line;
+	temp->column = column;
 	current->childs.push_back(temp);
 	current = temp;
 }
