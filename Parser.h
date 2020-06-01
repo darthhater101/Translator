@@ -12,13 +12,13 @@ private:
 	bool block();
 	bool variable_declaration();
 	bool declarations_list();
-	bool declaration();
+	bool declaration(bool& err);
 	bool variable_identifier();
 	bool attribute();
 	bool statement_list();
-	bool statement();
-	bool condition_statement();
-	bool incomplete_condition_statement();
+	bool statement(bool& err);
+	bool condition_statement(bool& err);
+	bool incomplete_condition_statement(bool& err);
 	bool conditional_expression();
 	bool expression();
 	bool unsigned_integer();
@@ -27,6 +27,8 @@ private:
 	bool identifier();
 
 	void get_lexem();
+
+	void generate_error(std::string expected, int line, int column, int found);
 
 	std::vector<struct Lexer::lexem> lexer_result;
 	std::shared_ptr<InformationTables> tables;

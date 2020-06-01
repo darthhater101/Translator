@@ -20,7 +20,7 @@ void Generator::traversal(const std::shared_ptr<struct Tree::node>& node)
 		traversal(node->childs.at(2));
 		traversal(node->childs.at(3));
 	}
-	else if (node->value == "<variable-declarations>")
+	else if (node->value == "<variable-declaration>")
 	{
 		if (node->childs.at(0)->value == "<empty>")
 			return;
@@ -48,7 +48,7 @@ void Generator::traversal(const std::shared_ptr<struct Tree::node>& node)
 		traversal(node->childs.at(0));
 		if (identifier_exists(node->childs.at(0)->childs.at(0)->childs.at(0)->value))
 		{
-			error << "Generator: Such identifier already exist: " << "row: " + std::to_string(node->childs.at(0)->childs.at(0)->childs.at(0)->line)
+			error << "Generator: Such identifier already exist: " << "line: " + std::to_string(node->childs.at(0)->childs.at(0)->childs.at(0)->line)
 				+ " column: " + std::to_string(node->childs.at(0)->childs.at(0)->childs.at(0)->column) + ", identifier: "
 				+ node->childs.at(0)->childs.at(0)->childs.at(0)->value + "\n";
 		}
@@ -66,9 +66,9 @@ void Generator::traversal(const std::shared_ptr<struct Tree::node>& node)
 	else if (node->value == "<attribute>")
 	{
 		if (node->childs.at(0)->value == "INTEGER")
-			program.append(" DW ");
+			program.append(" DD ");
 		if (node->childs.at(0)->value == "FLOAT")
-			program.append(" DW ");
+			program.append(" DD ");
 	}
 	else if (node->value == "BEGIN")
 	{
@@ -125,13 +125,13 @@ void Generator::traversal(const std::shared_ptr<struct Tree::node>& node)
 		{
 			if (!identifier_exists(node->childs.at(0)->childs.at(0)->childs.at(0)->value))
 			{
-				error << "Generator: No such identifier: " << "row: " + std::to_string(node->childs.at(0)->childs.at(0)->childs.at(0)->line)
+				error << "Generator: No such identifier: " << "line: " + std::to_string(node->childs.at(0)->childs.at(0)->childs.at(0)->line)
 					+ " column: " + std::to_string(node->childs.at(0)->childs.at(0)->childs.at(0)->column) + ", identifier: "
 					+ node->childs.at(0)->childs.at(0)->childs.at(0)->value + "\n";
 			}
 			if (node->childs.at(0)->childs.at(0)->childs.at(0)->value == program_identifier)
 			{
-				error << "Generator: Such identifier already exist: " << "row: " + std::to_string(node->childs.at(0)->childs.at(0)->childs.at(0)->line)
+				error << "Generator: Such identifier already exist: " << "line: " + std::to_string(node->childs.at(0)->childs.at(0)->childs.at(0)->line)
 					+ " column: " + std::to_string(node->childs.at(0)->childs.at(0)->childs.at(0)->column) + ", identifier: "
 					+ node->childs.at(0)->childs.at(0)->childs.at(0)->value + "\n";
 			}

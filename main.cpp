@@ -5,9 +5,11 @@
 #include <iostream>
 #include <cstdlib>
 
-int main()
+int main(int argc, char **args)
 {
-	Translator translator;
+	std::string path = args[1];
+	std::cout << path << std::endl;
+	Translator translator(path);
 	translator.translation();
 	return 0;
 }

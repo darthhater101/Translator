@@ -3,7 +3,6 @@
 #include <vector>
 #include <memory>
 #include <ostream>
-#include <optional>
 
 class Tree
 {

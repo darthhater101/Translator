@@ -2,21 +2,22 @@
 #include <map>
 
 std::map<int, std::string> errors = {
-	{-1, "\'PROGRAM\' expected!\n"},
-	{-2, "\';\' expected!\n"},
-	{-3, "\'.\' expected!\n"},
-	{-4, "Not identifier!\n"},
-	{-5, "\'BEGIN\' expected!\n"},
-	{-6, "\'END\' expected!\n"},
-	{-7, "\'VAR\' expected!\n"},
-	{-8, "\':\' expected!\n"},
-	{-9, "\'INTEGER\' or \'FLOAT\' expected!\n"},
-	{-10, "\'ENDIF\' expected!\n"},
-	{-11, "\'IF\' expected!\n"},
-	{-12, "\'THEN\' expected!\n"},
-	{-13, "\'=\' expected!\n"},
-	{-14, "Constant or identifier expected!\n"},
-	{-15, "\'ELSE\' expected!\n"}
+	{-1, "\'PROGRAM\' expected!"},
+	{-2, "\';\' expected!"},
+	{-3, "\'.\' expected!"},
+	{-4, "Not identifier!"},
+	{-5, "\'BEGIN\' expected!"},
+	{-6, "\'END\' expected!"},
+	{-7, "\'VAR\' expected!"},
+	{-8, "\':\' expected!"},
+	{-9, "\'INTEGER\' or \'FLOAT\' expected!"},
+	{-10, "\'ENDIF\' expected!"},
+	{-11, "\'IF\' expected!"},
+	{-12, "\'THEN\' expected!"},
+	{-13, "\'=\' expected!"},
+	{-14, "Constant or identifier expected!"},
+	{-15, "\'ELSE\' expected!"},
+	{-16, "\'ENDLOOP\' expected!"}
 };
 
 Parser::~Parser()
@@ -34,7 +35,7 @@ bool Parser::program()
 	get_lexem();
 	if (current_lexem_code == 301)
 	{
-		tree.add("PROGRAM", coord.first, coord.second);
+		tree.add("PROGRAM");
 		tree.step_back();
 		get_lexem();
 		if (!procedure_identifier())
@@ -42,12 +43,12 @@ bool Parser::program()
 		get_lexem();
 		if (current_lexem_code == static_cast<int>(';'))
 		{
-			tree.add(";", coord.first, coord.second);
+			tree.add(";");
 			tree.step_back();
 		}
 		else
 		{
-			error << "row: " + std::to_string(coord.first) << ", column: " + std::to_string(coord.second) << " " << errors[-2];
+			generate_error(errors[-2], coord.first, coord.second, current_lexem_code);
 			return false;
 		}
 		if (!block())
@@ -55,18 +56,18 @@ bool Parser::program()
 		get_lexem();
 		if (current_lexem_code == static_cast<int>('.'))
 		{
-			tree.add(".", coord.first, coord.second);
+			tree.add(".");
 			tree.step_back();
 		}
 		else
 		{
-			error << "row: " + std::to_string(coord.first) << ", column: " + std::to_string(coord.second) << " " << errors[-3];
+			generate_error(errors[-3], coord.first, coord.second, current_lexem_code);
 			return false;
 		}
 	}
 	else
 	{
-		error << "row: " + std::to_string(coord.first) << ", column: " + std::to_string(coord.second) << " " << errors[-1];
+		generate_error(errors[-1], coord.first, coord.second, current_lexem_code);
 		return false;
 	}
 	tree.step_back();
@@ -89,26 +90,25 @@ bool Parser::block()
 		return false;
 	if (current_lexem_code == 302)
 	{
-		tree.add("BEGIN", coord.first, coord.second);
+		tree.add("BEGIN");
 		tree.step_back();
 		get_lexem();
 		if (!statement_list())
 			return false;
-		//get_lexem();
 		if (current_lexem_code == 303)
 		{
-			tree.add("END", coord.first, coord.second);
+			tree.add("END");
 			tree.step_back();
 		}
 		else
 		{
-			error << "row: " + std::to_string(coord.first) << ", column: " + std::to_string(coord.second) << " " << errors[-6];
+			generate_error(errors[-6], coord.first, coord.second, current_lexem_code);
 			return false;
 		}
 	}
 	else
 	{
-		error << "row: " + std::to_string(coord.first) << ", column: " + std::to_string(coord.second) << " " << errors[-5];
+		generate_error(errors[-5], coord.first, coord.second, current_lexem_code);
 		return false;
 	}
 	tree.step_back();
@@ -117,9 +117,9 @@ bool Parser::block()
 
 bool Parser::variable_declaration()
 {
-	tree.add("<variable-declarations>");
+	tree.add("<variable-declaration>");
 	get_lexem();
-	if (current_lexem_code == 302)
+	if (current_lexem_code != 304)
 	{
 		tree.add("<empty>");
 		tree.step_back();
@@ -128,15 +128,16 @@ bool Parser::variable_declaration()
 	{
 		if (current_lexem_code == 304)
 		{
-			tree.add("VAR", coord.first, coord.second);
+			tree.add("VAR");
 			tree.step_back();
 			get_lexem();
 			if (!declarations_list())
 				return false;
+			error.str("");
 		}
 		else
 		{
-			error << "row: " + std::to_string(coord.first) << ", column: " + std::to_string(coord.second) << " " << errors[-7];
+			generate_error(errors[-7], coord.first, coord.second, current_lexem_code);
 			return false;
 		}
 	}
@@ -147,55 +148,66 @@ bool Parser::variable_declaration()
 bool Parser::declarations_list()
 {
 	tree.add("<declarations-list>");
-	if (current_lexem_code == 302)
+	bool can_be_decl_error = false;
+	if (declaration(can_be_decl_error))
 	{
+		get_lexem();
+		bool b = declarations_list();
+		tree.step_back();
+		return b;
+	}
+	else
+	{
+		if (can_be_decl_error)
+			tree.step_back();
+		tree.step_back();
+		tree.delete_childs();
 		tree.add("<empty>");
 		tree.step_back();
+		tree.step_back();
+		return can_be_decl_error;
 	}
-	else
-	{
-		if (!declaration())
-			return false;
-		get_lexem();
-		if (!declarations_list())
-			return false;
-	}
-	tree.step_back();
-	return true;
 }
 
-bool Parser::declaration()
+bool Parser::declaration(bool& err)
 {
 	tree.add("<declaration>");
-	if (!variable_identifier())
-		return false;
-	get_lexem();
-	if (current_lexem_code == static_cast<int>(':'))
+	if (variable_identifier())
 	{
-		tree.add(":", coord.first, coord.second);
+		get_lexem();
+		if (current_lexem_code == static_cast<int>(':'))
+		{
+			tree.add(":");
+			tree.step_back();
+			get_lexem();
+			if (attribute())
+			{
+				get_lexem();
+				if (current_lexem_code == static_cast<int>(';'))
+				{
+					tree.add(";");
+					tree.step_back();
+				}
+				else
+				{
+					generate_error(errors[-2], coord.first, coord.second, current_lexem_code);
+					return false;
+				}
+			}
+			else
+				return false;
+		}
+		else
+		{
+			generate_error(errors[-8], coord.first, coord.second, current_lexem_code);
+			return false;
+		}
 		tree.step_back();
-	}
-	else
-	{
-		error << "row: " + std::to_string(coord.first) << ", column: " + std::to_string(coord.second) << " " << errors[-8];
-		return false;
-	}
-	get_lexem();
-	if (!attribute())
-		return false;
-	get_lexem();
-	if (current_lexem_code == static_cast<int>(';'))
-	{
-		tree.add(";", coord.first, coord.second);
-		tree.step_back();
-	}
-	else
-	{
-		error << "row: " + std::to_string(coord.first) << ", column: " + std::to_string(coord.second) << " " << errors[-2];
-		return false;
+		return true;
 	}
 	tree.step_back();
-	return true;
+	err = true;
+	return false;
 }
 
 bool Parser::variable_identifier()
@@ -213,12 +225,13 @@ bool Parser::attribute()
 	if (current_lexem_code != tables->get_keywords("INTEGER")
 		&& current_lexem_code != tables->get_keywords("FLOAT"))
 	{
-		error << "row: " + std::to_string(coord.first) << ", column: " + std::to_string(coord.second) << " " << errors[-9];
+		generate_error(errors[-9], coord.first, coord.second, current_lexem_code);
+		tree.step_back();
 		return false;
 	}
 	else
 	{
-		tree.add(tables->get_keyword_string(current_lexem_code), coord.first, coord.second);
+		tree.add(tables->get_keyword_string(current_lexem_code));
 		tree.step_back();
 	}
 	tree.step_back();
@@ -228,72 +241,77 @@ bool Parser::attribute()
 bool Parser::statement_list()
 {
 	tree.add("<statement-list>");
-	if (current_lexem_code == 303 || current_lexem_code == 310 || current_lexem_code == 308)
+	bool can_be_stat_error = false;
+
+	if (statement(can_be_stat_error))
 	{
-		tree.add("<empty>");
+		get_lexem();
+		bool b = statement_list();
 		tree.step_back();
+		return b;
 	}
 	else
 	{
-		if (!statement())
-			return false;
-		get_lexem();
-		if (!statement_list())
-			return false;
+		if (can_be_stat_error)
+			tree.step_back();
+		tree.step_back();
+		tree.delete_childs();
+		tree.add("<empty>");
+		tree.step_back();
+		tree.step_back();
+		return can_be_stat_error;
 	}
-	tree.step_back();
-	return true;
 }
 
-bool Parser::statement()
+bool Parser::statement(bool& err)
 {
 	tree.add("<statement>");
-	if (!condition_statement())
-		return false;
-	//get_lexem();
-	if (current_lexem_code == 308)
+	if (condition_statement(err))
 	{
-		tree.add("ENDIF", coord.first, coord.second);
-		tree.step_back();
-		get_lexem();
-		if (current_lexem_code == static_cast<int>(';'))
+		if (current_lexem_code == 308)
 		{
-			tree.add(";", coord.first, coord.second);
+			tree.add("ENDIF");
 			tree.step_back();
+			get_lexem();
+			if (current_lexem_code == static_cast<int>(';'))
+			{
+				tree.add(";");
+				tree.step_back();
+			}
+			else
+			{
+				generate_error(errors[-2], coord.first, coord.second, current_lexem_code);
+				return false;
+			}
 		}
 		else
 		{
-			error << "row: " + std::to_string(coord.first) << ", column: " + std::to_string(coord.second) << " " << errors[-2];
+			generate_error(errors[-10], coord.first, coord.second, current_lexem_code);
 			return false;
 		}
+		tree.step_back();
+		return true;
 	}
-	else
-	{
-		error << "row: " + std::to_string(coord.first) << ", column: " + std::to_string(coord.second) << " " << errors[-10];
-		return false;
-	}
-	tree.step_back();
-	return true;
+	return false;
 }
 
-bool Parser::condition_statement()
+bool Parser::condition_statement(bool& err)
 {
 	tree.add("<condition-statement>");
-	if (!incomplete_condition_statement())
+	if (!incomplete_condition_statement(err))
 		return false;
-	//get_lexem();
 	if (!alternative_part())
 		return false;
 	tree.step_back();
 	return true;
 }
 
-bool Parser::incomplete_condition_statement()
+bool Parser::incomplete_condition_statement(bool& err)
 {
 	tree.add("<incomplete-condition-statement>");
 	if (current_lexem_code == 307)
 	{
-		tree.add("IF", coord.first, coord.second);
+		tree.add("IF");
 		tree.step_back();
 		get_lexem();
 		if (!conditional_expression())
@@ -301,25 +319,26 @@ bool Parser::incomplete_condition_statement()
 		get_lexem();
 		if (current_lexem_code == 309)
 		{
-			tree.add("THEN", coord.first, coord.second);
+			tree.add("THEN");
 			tree.step_back();
 			get_lexem();
 			if (!statement_list())
+			{
+				tree.step_back();
 				return false;
+			}
 		}
 		else
 		{
-			error << "row: " + std::to_string(coord.first) << ", column: " + std::to_string(coord.second) << " " << errors[-12];
+			generate_error(errors[-12], coord.first, coord.second, current_lexem_code);
 			return false;
 		}
-	}
-	else
-	{
-		error << "row: " + std::to_string(coord.first) << ", column: " + std::to_string(coord.second) << " " << errors[-11];
-		return false;
+		tree.step_back();
+		return true;
 	}
 	tree.step_back();
-	return true;
+	err = true;
+	return false;
 }
 
 bool Parser::conditional_expression()
@@ -330,12 +349,12 @@ bool Parser::conditional_expression()
 	get_lexem();
 	if (current_lexem_code == static_cast<int>('='))
 	{
-		tree.add("=", coord.first, coord.second);
+		tree.add("=");
 		tree.step_back();
 	}
 	else
 	{
-		error << "row: " + std::to_string(coord.first) << ", column: " + std::to_string(coord.second) << " " << errors[-13];
+		generate_error(errors[-13], coord.first, coord.second, current_lexem_code);
 		return false;
 	}
 	get_lexem();
@@ -353,7 +372,7 @@ bool Parser::expression()
 		tree.step_back();
 		tree.step_back();
 		tree.delete_childs();
-		error.clear();
+		error.str("");
 		if (!unsigned_integer())
 		{
 			return false;
@@ -368,12 +387,12 @@ bool Parser::unsigned_integer()
 	tree.add("<unsigned-integer>");
 	if (!tables->is_constant(current_lexem_code))
 	{
-		error << "row: " + std::to_string(coord.first) << ", column: " + std::to_string(coord.second) << " " << errors[-14];
+		generate_error(errors[-14], coord.first, coord.second, current_lexem_code);
 		return false;
 	}
 	else
 	{
-		tree.add(tables->get_constant_string(current_lexem_code), coord.first, coord.second);
+		tree.add(tables->get_constant_string(current_lexem_code));
 		tree.step_back();
 	}
 	tree.step_back();
@@ -383,7 +402,7 @@ bool Parser::unsigned_integer()
 bool Parser::alternative_part()
 {
 	tree.add("<alternative-part>");
-	if (current_lexem_code == 308)
+	if (current_lexem_code != 310)
 	{
 		tree.add("<empty>");
 		tree.step_back();
@@ -392,7 +411,7 @@ bool Parser::alternative_part()
 	{
 		if (current_lexem_code == 310)
 		{
-			tree.add("ELSE", coord.first, coord.second);
+			tree.add("ELSE");
 			tree.step_back();
 			get_lexem();
 			if (!statement_list())
@@ -400,7 +419,7 @@ bool Parser::alternative_part()
 		}
 		else
 		{
-			error << "row: " + std::to_string(coord.first) << ", column: " + std::to_string(coord.second) << " " << errors[-15];
+			generate_error(errors[-15], coord.first, coord.second, current_lexem_code);
 			return false;
 		}
 	}
@@ -413,12 +432,12 @@ bool Parser::identifier()
 	tree.add("<identifier>");
 	if (!tables->is_identifier(current_lexem_code))
 	{
-		error << "row: " + std::to_string(coord.first) << ", column: " + std::to_string(coord.second) << " " << errors[-4];
+		generate_error(errors[-4], coord.first, coord.second, current_lexem_code);
 		return false;
 	}
 	else
 	{
-		tree.add(tables->get_identifier_string(current_lexem_code), coord.first, coord.second);
+		tree.add(tables->get_identifier_string(current_lexem_code));
 		tree.step_back();
 	}
 	tree.step_back();
@@ -435,3 +454,26 @@ void Parser::get_lexem()
 		current_position++;
 	}
 }
+
+void Parser::generate_error(std::string expected, int line, int column, int found)
+{
+	std::string found_str;
+	if (tables->is_constant(found))
+	{
+		found_str = tables->get_constant_string(found);
+	}
+	else if (tables->is_identifier(found))
+	{
+		found_str = tables->get_identifier_string(found);
+	}
+	else if (tables->is_keyword(found))
+	{
+		found_str = tables->get_keyword_string(found);
+	}
+	else if (tables->is_separator(found))
+	{
+		found_str = tables->get_separator_string(found);
+	}
+	error << "line: " + std::to_string(line) << ", column: " + std::to_string(column) << ": " << expected << ", but \'" << found_str << "\' found\n";
+}
+

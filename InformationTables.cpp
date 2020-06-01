@@ -1,6 +1,7 @@
 #include "InformationTables.h"
 #include <iostream>
 #include <iomanip>
+#include <string>
 
 InformationTables::InformationTables()
 {
@@ -48,6 +49,26 @@ bool InformationTables::is_constant(int code)
 	return false;
 }
 
+bool InformationTables::is_keyword(int code)
+{
+	for (const auto& it : key_words)
+	{
+		if (it.second == code)
+			return true;
+	}
+	return false;
+}
+
+bool InformationTables::is_separator(int code)
+{
+	for (const auto& it : separators)
+	{
+		if (it.second == code)
+			return true;
+	}
+	return false;
+}
+
 std::string InformationTables::get_identifier_string(int code)
 {
 	for (const auto& it : identifiers)
@@ -69,6 +90,15 @@ std::string InformationTables::get_keyword_string(int code)
 std::string InformationTables::get_constant_string(int code)
 {
 	for (const auto& it : constants)
+	{
+		if (it.second == code)
+			return it.first;
+	}
+}
+
+char InformationTables::get_separator_string(int code)
+{
+	for (const auto& it : separators)
 	{
 		if (it.second == code)
 			return it.first;
